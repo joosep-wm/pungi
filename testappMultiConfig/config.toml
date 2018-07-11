@@ -1,0 +1,14 @@
+[testapp]
+port = 4444
+dbUri = "inmemory"
+cpuprofile = true
+
+[testapp.httpgw]
+port = 6666
+cpuprofile = true
+grpcUri = "http://my.friend:5432"
+
+[testapp.grpc]
+port = 7777
+cpuprofile = false
+dbUri = "inmemory:multi"

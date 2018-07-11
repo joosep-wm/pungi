@@ -1,0 +1,4 @@
+[testapp]
+port = 9999
+dbUri = "custom-dburi"
+cpuprofile = true
