@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	pungi.New("testapp [your-name]", "Starts music store web application.").
+	pungi.New("testapp", "Starts music store web application.").
 		Key("port", 8080, "Listen port").
 		Key("cpuprofile", false, "Starts CPU profiler if set to true.").
 		Key("dbUri", "boltdb:db/my.db", "DB Uri").
