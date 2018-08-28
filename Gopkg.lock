@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/Guardtime/evat"
-  packages = ["pungi"]
-  revision = "3d35598df8e931ac6c37b62a6e9e87bd180b13a9"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -154,6 +148,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dca8013efb803254ebe065f1bf37aa3b57efb566d78d1f2f3f91b860bc621a18"
+  inputs-digest = "31d15f28862891252daa30d08c9b59f5eb48e357736ce1f1c12c4f03d2145b4b"
   solver-name = "gps-cdcl"
   solver-version = 1

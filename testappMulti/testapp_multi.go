@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/Guardtime/evat/pungi"
+	"github.com/joosep-wm/pungi"
 )
 
 func main() {
