@@ -6,7 +6,7 @@ Pungi's goal is to simplify command line application startup and configuration. 
 * Configuration overloading
 * Configuration definition in Go code
 
-## Hello World Example
+## Hello world example
 ```go
 package main
 import "github.com/joosep-wm/pungi"
@@ -25,7 +25,7 @@ func startApp(conf *pungi.Conf, args []string) error {
 ```
 In this example the application `testapp` has one string typed configuration parameter: `name`.
 
-## Using Commands 
+## Using commands 
 Application can use commands for different behaviour.
 For example:
 ```go
@@ -57,7 +57,14 @@ func startGrpcService(conf *pungi.Conf, args []string) error {
 ```
 In this example the configuration key `cpuprofile` is used by both commands. Each command has their own specific configuration values.
 
-## Configuration Key Lookup
+## Using arguments
+All the arguments passed to the application will be sent to the runnable functions.
+
+The arguments can be validated using "Args" function. E.g. `...pungiBuilder.Args(cobra.ExactArgs(1))`.
+
+Preexisting validation functions exist in the Cobra library.
+
+## Configuration key lookup
 Configuration values are looked up in the following order:  
 1. Command line flags
 2. Environment variables
@@ -69,7 +76,7 @@ Command line flags overload all other sources of configuration. Some examples:
 * `testapp grpc --cpuprofile=true --port=4444`
 * `testapp httpgw --port=8000`
 
-### Use Environment variables
+### Use environment variables
 Environment variables use this naming convention: 
 * APPNAME_KEY - for global configuration keys. E.g. `TESTAPP_CONFIG`
 * APPNAME_CMD_KEY - for command specific configuration keys. E.g. `TESTAPP_HTTPGW_PORT`
