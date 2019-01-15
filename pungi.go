@@ -1,13 +1,14 @@
 package pungi
 
 import (
-	"flag"
-	"reflect"
+	goflag "flag"
+	"fmt"
 	"os"
+	"reflect"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -45,7 +46,7 @@ func NewConfigFileOnly(appName, filePath string) (*Pungi, error) {
 			configFileUsed: viper.ConfigFileUsed(),
 		}, nil
 	} else {
-		glog.Errorf("Could not load config from %s\n Error: %v", viper.ConfigFileUsed(), err)
+		fmt.Fprintf(os.Stderr, "Could not load config from %s\n Error: %v", viper.ConfigFileUsed(), err)
 		return nil, err
 	}
 }
@@ -53,9 +54,11 @@ func NewConfigFileOnly(appName, filePath string) (*Pungi, error) {
 // Initializes and executes Pungi. In case of errors panics.
 func (p *pungiBuilder) Execute() {
 	if pungi, err := p.Initialize(); err != nil {
-		glog.Fatal(err)
+		panic(err)
 	} else {
-		pungi.Execute()
+		if err := pungi.Execute(); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -82,6 +85,14 @@ func (p *pungiBuilder) Initialize() (*Pungi, error) {
 	pungi.appName = p.appName
 	pungi.confs = p.confs
 	pungi.rootCmd = p.rootCommand
+
+	// Adds "normal" flags too. I.e. glog
+	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+	// Hack to convince flag that flags are parsed.
+	if err := flag.CommandLine.Parse([]string{}); err != nil {
+		return nil, err
+	}
+
 	return pungi, nil
 }
 
@@ -173,7 +184,9 @@ func (p *pungiBuilder) initSubCommand(cmd *Command) {
 func (p *pungiBuilder) initRootCommand(pungi *Pungi) {
 	var cfgFile string
 	cobra.OnInitialize(func() {
-		p.initViper(pungi, cfgFile)
+		if err := p.initViper(pungi, cfgFile); err != nil {
+			panic(err)
+		}
 	})
 
 	p.confs["_root_"] = &Conf{appName: p.appName}
@@ -192,7 +205,6 @@ func (p *pungiBuilder) initRootCommand(pungi *Pungi) {
 		RunE:  rootRunnable,
 	}
 
-	p.rootCommand.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 	p.rootCommand.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is config.toml)")
 }
 
@@ -200,16 +212,24 @@ func (p *pungiBuilder) bindSubCmdKey(command *cobra.Command, cmdName, key string
 	confKey := formatCommandConfKey(p.appName, cmdName, key)
 	envKey := formatCommandEnvKey(p.appName, cmdName, key)
 
-	viper.BindPFlag(confKey, command.Flags().Lookup(key))
-	viper.BindEnv(confKey, envKey)
+	if err := viper.BindPFlag(confKey, command.Flags().Lookup(key)); err != nil {
+		panic(err)
+	}
+	if err := viper.BindEnv(confKey, envKey); err != nil {
+		panic(err)
+	}
 }
 
 func (p *pungiBuilder) bindRootKey(command *cobra.Command, key string) {
 	confKey := formatRootConfKey(p.appName, key)
 	envKey := formatRootEnvKey(p.appName, key)
 
-	viper.BindPFlag(confKey, command.Flags().Lookup(key))
-	viper.BindEnv(confKey, envKey)
+	if err := viper.BindPFlag(confKey, command.Flags().Lookup(key)); err != nil {
+		panic(err)
+	}
+	if err := viper.BindEnv(confKey, envKey); err != nil {
+		panic(err)
+	}
 }
 
 func (p *pungiBuilder) validateKeys() error {
@@ -267,7 +287,7 @@ func (p *pungiBuilder) initViper(pungi *Pungi, cfgFileFlag string) error {
 			println("Default config file not found")
 			err = nil
 		} else {
-			glog.Errorf("Could not load config from %s\n Error: %v", viper.ConfigFileUsed(), err)
+			fmt.Fprintf(os.Stderr, "Could not load config from %s\n Error: %v", viper.ConfigFileUsed(), err)
 		}
 	}
 	pungi.configFileUsed = viper.ConfigFileUsed()
