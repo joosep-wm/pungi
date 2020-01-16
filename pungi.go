@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const rootKey = "_root_"
+
 /*
  Start here.
 
@@ -36,6 +38,7 @@ func New(usageText, desc string) *pungiBuilder {
 	}
 }
 
+// Initializes configuration only from a config file. Useful for using inside tests.
 func NewConfigFileOnly(appName, filePath string) (*Pungi, error) {
 	viper.SetConfigFile(filePath)
 	err := viper.ReadInConfig()
@@ -46,7 +49,7 @@ func NewConfigFileOnly(appName, filePath string) (*Pungi, error) {
 			configFileUsed: viper.ConfigFileUsed(),
 		}, nil
 	} else {
-		fmt.Fprintf(os.Stderr, "Could not load config from %s\n Error: %v", viper.ConfigFileUsed(), err)
+		_, _ = fmt.Fprintf(os.Stderr, "Could not load config from %s\n Error: %v", viper.ConfigFileUsed(), err)
 		return nil, err
 	}
 }
@@ -189,12 +192,12 @@ func (p *pungiBuilder) initRootCommand(pungi *Pungi) {
 		}
 	})
 
-	p.confs["_root_"] = &Conf{appName: p.appName}
+	p.confs[rootKey] = newRootConf(p.appName)
 	var rootRunnable func(cmd *cobra.Command, args []string) error
 
 	if p.runnable != nil {
 		rootRunnable = func(cobraCmd *cobra.Command, args []string) error {
-			return p.runnable(p.confs["_root_"], args)
+			return p.runnable(p.confs[rootKey], args)
 		}
 	}
 
@@ -287,7 +290,7 @@ func (p *pungiBuilder) initViper(pungi *Pungi, cfgFileFlag string) error {
 			println("Default config file not found")
 			err = nil
 		} else {
-			fmt.Fprintf(os.Stderr, "Could not load config from %s\n Error: %v", viper.ConfigFileUsed(), err)
+			_, _ = fmt.Fprintf(os.Stderr, "Could not load config from %s\n Error: %v", viper.ConfigFileUsed(), err)
 		}
 	}
 	pungi.configFileUsed = viper.ConfigFileUsed()
@@ -321,10 +324,23 @@ type Pungi struct {
 	appName        string
 }
 
+// Returns the root config. The values that are shared by commands
+// If no commands are defined, then the application config.
 func (p *Pungi) RootConfig() *Conf {
-	return p.confs["_root_"]
+	if p.confs == nil {
+		p.confs = make(map[string]*Conf)
+	}
+	if _, ok := p.confs[rootKey]; !ok {
+		p.confs[rootKey] = newRootConf(p.appName)
+	}
+	return p.confs[rootKey]
 }
 
+func newRootConf(appName string) *Conf {
+	return &Conf{appName: appName}
+}
+
+// Returns specific command configuration
 func (p *Pungi) Config(cmdName string) *Conf {
 	if conf, ok := p.confs[cmdName]; ok {
 		return conf
@@ -335,6 +351,7 @@ func (p *Pungi) Config(cmdName string) *Conf {
 	}
 }
 
+// Returns the config file name that is used
 func (p *Pungi) ConfigFileUsed() string {
 	return p.configFileUsed
 }

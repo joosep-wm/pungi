@@ -124,6 +124,15 @@ func TestFloatKeyValue(t *testing.T) {
 	require.Equal(t, float64(2.0), p.RootConfig().GetFloat64("port"))
 }
 
+func TestOnlyConfigFile(t *testing.T) {
+	viper.Reset()
+	p, err := pungi.NewConfigFileOnly("testapp", "../testappConfig/config.custom.toml")
+	require.NoError(t, err)
+	assert.Equal(t, 9999, p.RootConfig().GetInt("port"))
+	assert.Equal(t, "custom-dburi", p.RootConfig().GetString("dbUri"))
+	assert.Equal(t, true, p.RootConfig().GetBool("cpuprofile"))
+}
+
 func TestOnlyConfigFileSetupMulti(t *testing.T) {
 	viper.Reset()
 	p, err := pungi.NewConfigFileOnly("testapp", "../testappMultiConfig/config.toml")
@@ -222,15 +231,15 @@ func TestTwoCommandsAllValues(t *testing.T) {
 
 var webAppArgs, grpcArgs, httpArgs []string
 
-func startWebApp(conf *pungi.Conf, args []string) error {
+func startWebApp(_ *pungi.Conf, args []string) error {
 	webAppArgs = args
 	return nil
 }
-func httpgwFunc(conf *pungi.Conf, args []string) error {
+func httpgwFunc(_ *pungi.Conf, args []string) error {
 	httpArgs = args
 	return nil
 }
-func grpcFunc(conf *pungi.Conf, args []string) error {
+func grpcFunc(_ *pungi.Conf, args []string) error {
 	grpcArgs = args
 	return nil
 }
